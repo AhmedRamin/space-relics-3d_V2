@@ -1,0 +1,21 @@
+{
+  "name": "space-relics-3d",
+  "version": "3.0.0",
+  "private": true,
+  "description": "Space Relics 3D \u2014 static interactive Solar System explorer (data bundled, no backend)",
+  "scripts": {
+    "dev": "npm --prefix client run dev",
+    "build": "npm --prefix client install --include=dev && npm --prefix client run build",
+    "preview": "npm --prefix client run preview",
+    "install:client": "npm --prefix client install --include=dev",
+    "dataset": "python3 tools/build-dataset.py",
+    "media": "python3 tools/resolve-media.py",
+    "analyze": "python3 tools/analyze-dataset.py",
+    "smoke": "npm --prefix client run smoke",
+    "test:local": "npm --prefix client run test:local",
+    "verify:all": "npm --prefix client run build && npm --prefix client run smoke && npm --prefix client run test:local"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
