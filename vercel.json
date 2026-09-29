@@ -1,9 +1,9 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
-  "installCommand": "echo 'dependencies are installed inside client/ by the build command'",
-  "buildCommand": "npm --prefix client install --include=dev && npm --prefix client run build",
-  "outputDirectory": "client/dist",
+  "installCommand": "echo 'skipping Vercel install; the build command installs what it needs'",
+  "buildCommand": "if [ -f client/package.json ]; then npm --prefix client install --include=dev && npm --prefix client run build && cp -r client/dist dist; else npm install --include=dev && npm run build; fi",
+  "outputDirectory": "dist",
   "headers": [
     {
       "source": "/assets/(.*)",

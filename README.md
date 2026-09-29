@@ -45,11 +45,26 @@ The repo ships a `vercel.json`, so it is a one-click deploy:
 
 1. Push the repo to GitHub.
 2. In Vercel, **Add New → Project** and import the repo.
-3. Leave the defaults — `vercel.json` supplies the rest:
-   * **Build command:** `npm --prefix client install --include=dev && npm --prefix client run build`
-   * **Output directory:** `client/dist`
-   * SPA fallback so deep links resolve, and long-cache headers for `/assets` and `/data`.
+3. Leave **Root Directory** empty (the repository root) and the defaults otherwise — `vercel.json`
+   supplies the rest and detects the layout automatically.
 4. Deploy. No environment variables are required.
+
+### Root Directory — read this
+`vercel.json` sits at the repo root, so the standard deploy leaves **Root Directory** blank. The
+build command detects whether `client/package.json` exists and handles either choice:
+
+| Root Directory | What runs | Output |
+|---|---|---|
+| *(empty — recommended)* | `npm --prefix client install --include=dev && npm --prefix client run build`, then copies the result to `./dist` | `dist` |
+| `client` | `npm install --include=dev && npm run build` (already inside the client) | `dist` under `client/` |
+
+The client also carries its own `client/vercel.json`, so setting Root Directory to `client` works
+on its own as well.
+
+> **Seen before:** if the build fails with `ENOENT … /vercel/path0/client/client/package.json`, the
+> Root Directory is set to `client` while the build command also says `--prefix client`. Setting
+> Root Directory back to the repository root fixes it — or just use this build command, which
+> already handles both.
 
 Vercel checks the filesystem before applying the SPA rewrite, so `/data/*.json`, `/assets/*.js` and
 the images are always served directly — only unknown routes fall back to `index.html`.
