@@ -1,25 +1,29 @@
 #!/usr/bin/env python3
 """
-Rebuilds client/public/data/solar-system-dataset.json from a Solar System Explorer workbook.
+Rebuilds client/public/data/solar-system-dataset.json from a Space Relics workbook.
 
 Usage:
     python3 tools/build-dataset.py [path/to/workbook.xlsx]
 
 Requires: pandas, openpyxl.
+
+The workbook ships as `client/public/data/source/Space_Relics_3D_Dataset.xlsx`.
+Every sheet is optional-tolerant: if a column is missing the field is simply null, so an
+older workbook still builds. Extra NASA columns (NASA involvement filter, Relic panel story,
+citations, surface relic relevance) are carried straight through to the JSON — the UI reads
+them for the relic panel, and the timeline uses the parsed year columns.
 """
 import json
 import math
 import os
 import re
-import shutil
 import sys
 
 import pandas as pd
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-# The catalogue the static app fetches at runtime.
-DATA_DIR = os.path.join(ROOT, "client", "public", "data")
-DEFAULT_SRC = os.path.join(DATA_DIR, "source", "Solar_System_Explorer_Dataset.xlsx")
+DATA_DIR = os.path.join(ROOT, "public", "data")
+DEFAULT_SRC = os.path.join(DATA_DIR, "source", "Space_Relics_3D_Dataset.xlsx")
 SRC = sys.argv[1] if len(sys.argv) > 1 else DEFAULT_SRC
 OUT = os.path.join(DATA_DIR, "solar-system-dataset.json")
 
@@ -40,8 +44,28 @@ def num(value):
 def text(value):
     if value is None or (isinstance(value, float) and math.isnan(value)):
         return None
+    if hasattr(value, "strftime"):
+        return value.strftime("%Y-%m-%d")
     s = str(value).strip()
     return s or None
+
+
+def year_of(value):
+    """The year a date-ish cell falls in. Handles datetimes, ISO strings and prose."""
+    if value is None or (isinstance(value, float) and math.isnan(value)):
+        return None
+    if hasattr(value, "year"):
+        return int(value.year)
+    m = re.search(r"(1[6-9]\d{2}|20\d{2}|21\d{2})", str(value))
+    return int(m.group(1)) if m else None
+
+
+def col(row, name):
+    """A column that may not exist in an older workbook."""
+    try:
+        return row[name]
+    except (KeyError, IndexError):
+        return None
 
 
 TARGET_RULES = [
@@ -90,16 +114,22 @@ def status_group(status):
     if s.startswith("partial"):
         return "partial"
     if "fail" in s:
-        return "failed"
+        return "fail"
     return "ended"
 
 
 def main():
+    if not os.path.exists(SRC):
+        raise SystemExit(f"workbook not found: {SRC}")
+
     xl = pd.ExcelFile(SRC)
+    sheets = xl.sheet_names
 
     sun = {
         "id": "sun", "name": "Sun", "type": "Star (G2V)", "isDwarf": False, "isPlanet": False,
         "orderFromSun": 0, "meanDistanceAu": 0.0, "diameterKm": 1392700.0,
+        "axialTiltDeg": 7.25, "massEarth": 332946.0, "densityGCm3": 1.41,
+        "surfaceGravity": 274.0, "escapeVelocityKms": 617.7,
         "atmosphere": "Plasma photosphere, chromosphere and corona",
         "explorationHistory": "Parker Solar Probe, SOHO, SDO, Ulysses, Solar Orbiter, Helios.",
         "notes": "Added for the 3D scene; not present in the workbook.",
@@ -107,46 +137,54 @@ def main():
 
     bodies = [sun]
     for _, row in xl.parse("Planets & Dwarf Planets").iterrows():
-        t = text(row["Type"]) or "Body"
+        t = text(col(row, "Type")) or "Body"
         bodies.append({
-            "id": slug(row["Body"]), "name": text(row["Body"]), "type": t,
+            "id": slug(col(row, "Body")), "name": text(col(row, "Body")), "type": t,
             "isDwarf": "dwarf" in t.lower(),
-            "isPlanet": "planet" in t.lower() and "dwarf" not in t.lower(),
-            "orderFromSun": int(num(row["Order from Sun"])) if num(row["Order from Sun"]) is not None else None,
-            "meanDistanceAu": num(row["Mean distance (AU)"]),
-            "meanDistanceKm": num(row["Mean distance (km)"]),
-            "orbitPeriodDays": num(row["Orbital period (days)"]),
-            "rotationPeriodHours": num(row["Rotation period (hours)"]),
-            "diameterKm": num(row["Equatorial diameter (km)"]),
-            "surfaceGravity": num(row["Surface gravity (m/s2)"]),
-            "meanTemperatureC": text(row["Mean surface temperature (C)"]),
-            "atmosphere": text(row["Main atmosphere"]),
-            "ringSystem": text(row["Ring system"]),
-            "moonsConfirmed": int(num(row["Moons (IAU confirmed)"]) or 0),
-            "notableMoons": text(row["Notable moons"]),
-            "heliocentricLongitudeDeg": num(row["Current heliocentric longitude (deg)"]),
-            "currentDistanceFromSunAu": num(row["Current distance from Sun (AU)"]),
-            "currentDistanceFromEarthAu": num(row["Current distance from Earth (AU)"]),
-            "positionSummary": text(row["Approximate current position"]),
-            "explorationHistory": text(row["Exploration history"]),
-            "notes": text(row["Notes"]),
-            "imageUrl": text(row["Image URL"]),
+            "isPlanet": ("planet" in t.lower() or "giant" in t.lower()) and "dwarf" not in t.lower(),
+            "orderFromSun": int(num(col(row, "Order from Sun"))) if num(col(row, "Order from Sun")) is not None else None,
+            "meanDistanceAu": num(col(row, "Mean distance (AU)")),
+            "meanDistanceKm": num(col(row, "Mean distance (km)")),
+            "perihelionAu": num(col(row, "Perihelion (AU)")),
+            "aphelionAu": num(col(row, "Aphelion (AU)")),
+            "orbitalPeriodYears": num(col(row, "Orbital period (years)")),
+            "orbitPeriodDays": num(col(row, "Orbital period (days)")),
+            "rotationPeriodHours": num(col(row, "Rotation period (hours)")),
+            "axialTiltDeg": num(col(row, "Axial tilt (deg)")),
+            "diameterKm": num(col(row, "Equatorial diameter (km)")),
+            "massEarth": num(col(row, "Mass (Earth = 1)")),
+            "densityGCm3": num(col(row, "Density (g/cm3)")),
+            "surfaceGravity": num(col(row, "Surface gravity (m/s2)")),
+            "escapeVelocityKms": num(col(row, "Escape velocity (km/s)")),
+            "meanTemperatureC": text(col(row, "Mean surface temperature (C)")),
+            "atmosphere": text(col(row, "Main atmosphere")),
+            "ringSystem": text(col(row, "Ring system")),
+            "moonsConfirmed": int(num(col(row, "Moons (IAU confirmed)")) or 0),
+            "moonsJpl": int(num(col(row, "Moons (JPL orbit catalogue)")) or 0),
+            "notableMoons": text(col(row, "Notable moons")),
+            "heliocentricLongitudeDeg": num(col(row, "Current heliocentric longitude (deg)")),
+            "currentDistanceFromSunAu": num(col(row, "Current distance from Sun (AU)")),
+            "currentDistanceFromEarthAu": num(col(row, "Current distance from Earth (AU)")),
+            "positionSummary": text(col(row, "Approximate current position")),
+            "explorationHistory": text(col(row, "Exploration history")),
+            "notes": text(col(row, "Notes")),
+            "imageUrl": text(col(row, "Image URL")),
         })
-    # Earth's Moon is a mission destination in its own right (55 records), so it needs
-    # a body entry even though the workbook lists it on the Moons sheet.
+
+    # Earth's Moon is a mission destination in its own right, so it needs a body entry.
     bodies.append({
         "id": "moon", "name": "Moon", "type": "Natural satellite of Earth", "parentId": "earth",
         "isDwarf": False, "isPlanet": False, "meanDistanceAu": 1.00257,
         "meanDistanceKm": 384400.0, "orbitPeriodDays": 27.322, "rotationPeriodHours": 655.7,
-        "diameterKm": 3474.8, "surfaceGravity": 1.62, "moonsConfirmed": 0,
+        "diameterKm": 3474.8, "axialTiltDeg": 6.68, "surfaceGravity": 1.62,
+        "escapeVelocityKms": 2.38, "moonsConfirmed": 0,
         "meanTemperatureC": "-20 (range -173 to 127)",
         "atmosphere": "Almost none — a thin exosphere of helium, neon, hydrogen and argon",
         "ringSystem": "No",
         "positionSummary": "Orbits Earth every 27.3 days, 384,400 km away; the only other world humans have walked on.",
-        "explorationHistory": "Luna program, Ranger and Surveyor, Apollo 11-17 (12 crewed landings and 6 landings), Lunokhod, Chang'e, Chandrayaan, LRO, LCROSS, SLIM, Artemis.",
-        "notes": "Added as a first-class body so the 55 Moon-targeted missions have a destination in the 3D scene.",
+        "explorationHistory": "Luna program, Ranger and Surveyor, Apollo 11-17, Lunokhod, Chang'e, Chandrayaan, LRO, LCROSS, SLIM, Artemis.",
+        "notes": "Added as a first-class body so Moon-targeted missions have a destination in the 3D scene.",
     })
-
     bodies.append({
         "id": "asteroids", "name": "Asteroids & Comets", "type": "Small bodies (main belt, NEOs, comets)",
         "isDwarf": False, "isPlanet": False, "meanDistanceAu": 2.5, "diameterKm": None,
@@ -157,29 +195,46 @@ def main():
 
     moons = []
     for _, row in xl.parse("Moons (all 460)").iterrows():
-        parent = text(row["Parent body"])
+        parent = text(col(row, "Parent body"))
         moons.append({
-            "id": slug(f"{row['Moon / satellite name']}-{parent}"), "name": text(row["Moon / satellite name"]),
-            "parentId": slug(parent) if parent else None, "parentName": parent,
-            "class": text(row["Class"]), "jplCode": text(row["JPL code"]),
-            "semiMajorAxisKm": num(row["Semi-major axis (km)"]),
-            "orbitalPeriodDays": num(row["Orbital period (days)"]),
-            "eccentricity": num(row["Eccentricity"]), "inclinationDeg": num(row["Inclination (deg)"]),
-            "meanRadiusKm": num(row["Mean radius (km)"]), "densityGCm3": num(row["Mean density (g/cm3)"]),
-            "yearDiscovered": int(num(row["Year discovered"])) if num(row["Year discovered"]) is not None else None,
-            "discoverer": text(row["Discoverer"]),
-            "imageUrl": text(row["Image URL"]), "referenceUrl": text(row["Reference URL"]),
+            "id": slug(f"{col(row, 'Moon / satellite name')}-{parent}"),
+            "name": text(col(row, "Moon / satellite name")),
+            "parentId": slug(parent) if parent else None,
+            "parentName": parent,
+            "class": text(col(row, "Class")), "jplCode": text(col(row, "JPL code")),
+            "semiMajorAxisKm": num(col(row, "Semi-major axis (km)")),
+            "orbitalPeriodDays": num(col(row, "Orbital period (days)")),
+            "eccentricity": num(col(row, "Eccentricity")),
+            "inclinationDeg": num(col(row, "Inclination (deg)")),
+            "meanRadiusKm": num(col(row, "Mean radius (km)")),
+            "densityGCm3": num(col(row, "Mean density (g/cm3)")),
+            "yearDiscovered": year_of(col(row, "Year discovered")),
+            "discoverer": text(col(row, "Discoverer")),
+            "provisionalDesignation": text(col(row, "Provisional designation")),
+            "imageUrl": text(col(row, "Image URL")),
+            "referenceUrl": text(col(row, "Reference URL")),
         })
+
+    # NASA membership: the NASA-involved sheet is a filtered subset of Missions.
+    def mission_key(name, launch):
+        return (slug(name), year_of(launch))
+
+    nasa_keys = set()
+    if "NASA-involved missions" in sheets:
+        for _, row in xl.parse("NASA-involved missions").iterrows():
+            nasa_keys.add(mission_key(col(row, "Mission"), col(row, "Launch date")))
 
     missions = []
     seen = {}
     for _, row in xl.parse("Missions").iterrows():
-        category, mtype, target = text(row["Category"]), text(row["Type"]), text(row["Target"])
-        status = text(row["Status"])
-        working = text(row["Working now?"]) or ""
-        launch = row["Launch date"]
-        if hasattr(launch, "strftime"):
-            launch = launch.strftime("%Y-%m-%d")
+        category = text(col(row, "Category"))
+        mtype = text(col(row, "Type"))
+        target = text(col(row, "Target"))
+        status = text(col(row, "Status"))
+        working = text(col(row, "Working now?")) or ""
+        launch_year = year_of(col(row, "Launch date"))
+        launch = text(col(row, "Launch date"))
+        name = text(col(row, "Mission"))
 
         body_id = "earth"
         t = (target or "").lower()
@@ -197,67 +252,95 @@ def main():
                 kind = candidate
                 break
 
-        mid = slug(row["Mission"])
+        mid = slug(name)
         if mid in seen:
             seen[mid] += 1
             mid = f"{mid}-{seen[mid]}"
         else:
             seen[mid] = 0
 
+        nasa_flag = text(col(row, "NASA involvement filter"))
         missions.append({
-            "id": mid, "name": text(row["Mission"]), "category": category,
-            "agency": text(row["Agency / country"]), "type": mtype, "target": target,
-            "bodyId": body_id, "visualKind": kind, "launchDate": text(launch),
-            "launchVehicle": text(row["Launch vehicle"]), "status": status,
+            "id": mid, "name": name, "category": category,
+            "agency": text(col(row, "Agency / country")), "type": mtype, "target": target,
+            "bodyId": body_id, "visualKind": kind,
+            "launchDate": launch, "launchYear": launch_year,
+            "launchVehicle": text(col(row, "Launch vehicle")), "status": status,
             "statusGroup": status_group(status),
             "workingNow": working.lower().startswith("yes") or "lineage still flies" in working.lower(),
-            "workingNowText": working, "currentLocation": text(row["Approximate current location"]),
-            "story": text(row["Mission story"]), "achievement": text(row["What it achieved"]),
-            "imageUrl": text(row["Image URL"]), "referenceUrl": text(row["Reference URL"]),
+            "workingNowText": working, "currentLocation": text(col(row, "Approximate current location")),
+            "story": text(col(row, "Mission story")), "achievement": text(col(row, "What it achieved")),
+            "imageUrl": text(col(row, "Image URL")), "referenceUrl": text(col(row, "Reference URL")),
+            # NASA filtered dataset columns
+            "nasaInvolved": bool(nasa_flag) or mission_key(name, launch) in nasa_keys,
+            "nasaFilter": nasa_flag,
+            "relicStory": text(col(row, "Relic panel story")),
+            "nasaCitationUrl": text(col(row, "NASA citation URL")),
+            "storyCitationUrl": text(col(row, "Story citation URL")),
+            "citationNote": text(col(row, "Citation note")),
+            "relicRelevance": text(col(row, "Surface relic relevance")),
         })
 
     stations = []
     for _, row in xl.parse("Space Stations").iterrows():
-        launched = row["First module launch"]
-        if hasattr(launched, "strftime"):
-            launched = launched.strftime("%Y-%m-%d")
-        status = text(row["Status"])
-        working = text(row["Working now?"]) or ""
+        status = text(col(row, "Status"))
+        working = text(col(row, "Working now?")) or ""
         stations.append({
-            "id": slug(row["Station"]), "name": text(row["Station"]), "operator": text(row["Operator"]),
-            "type": text(row["Type"]), "firstModuleLaunch": text(launched),
-            "launchVehicle": text(row["Launch vehicle"]), "status": status,
+            "id": slug(col(row, "Station")), "name": text(col(row, "Station")),
+            "operator": text(col(row, "Operator")), "type": text(col(row, "Type")),
+            "firstModuleLaunch": text(col(row, "First module launch")),
+            "firstModuleYear": year_of(col(row, "First module launch")),
+            "launchVehicle": text(col(row, "Launch vehicle")), "status": status,
             "statusGroup": status_group(status), "workingNow": working.lower().startswith("yes"),
-            "workingNowText": working, "orbit": text(row["Orbit"]), "story": text(row["Story"]),
-            "achievement": text(row["What it achieved"]),
-            "imageUrl": text(row["Image URL"]), "referenceUrl": text(row["Reference URL"]),
+            "workingNowText": working, "orbit": text(col(row, "Orbit")),
+            "story": text(col(row, "Story")), "achievement": text(col(row, "What it achieved")),
+            "imageUrl": text(col(row, "Image URL")), "referenceUrl": text(col(row, "Reference URL")),
+            "nasaInvolved": bool(text(col(row, "NASA involvement filter"))),
+            "nasaFilter": text(col(row, "NASA involvement filter")),
+            "relicStory": text(col(row, "Relic panel story")),
+            "nasaCitationUrl": text(col(row, "NASA citation URL")),
+            "storyCitationUrl": text(col(row, "Story citation URL")),
+            "citationNote": text(col(row, "Citation note")),
         })
 
     rockets = []
     for _, row in xl.parse("Launch Vehicles").iterrows():
-        first = row["First flight"]
-        if hasattr(first, "strftime"):
-            first = first.strftime("%Y-%m-%d")
-        status = text(row["Status"])
-        flying = text(row["Flying today?"]) or ""
+        status = text(col(row, "Status"))
+        flying = text(col(row, "Flying today?")) or ""
         rockets.append({
-            "id": slug(row["Rocket"]), "name": text(row["Rocket"]), "country": text(row["Country / region"]),
-            "manufacturer": text(row["Manufacturer"]), "firstFlight": text(first),
-            "heightM": num(row["Height (m)"]), "payloadLeoKg": num(row["Payload to LEO (kg)"]),
-            "payloadGtoKg": num(row["Payload to GTO (kg)"]), "status": status,
+            "id": slug(col(row, "Rocket")), "name": text(col(row, "Rocket")),
+            "country": text(col(row, "Country / region")),
+            "manufacturer": text(col(row, "Manufacturer")),
+            "firstFlight": text(col(row, "First flight")),
+            "firstFlightYear": year_of(col(row, "First flight")),
+            "heightM": num(col(row, "Height (m)")),
+            "payloadLeoKg": num(col(row, "Payload to LEO (kg)")),
+            "payloadGtoKg": num(col(row, "Payload to GTO (kg)")), "status": status,
             "statusGroup": status_group(status), "flyingToday": flying.lower().startswith("yes"),
-            "flyingTodayText": flying, "story": text(row["Story"]),
-            "notableMissions": text(row["Notable missions"]),
-            "imageUrl": text(row["Image URL"]), "referenceUrl": text(row["Reference URL"]),
+            "flyingTodayText": flying, "story": text(col(row, "Story")),
+            "notableMissions": text(col(row, "Notable missions")),
+            "imageUrl": text(col(row, "Image URL")), "referenceUrl": text(col(row, "Reference URL")),
+            "nasaInvolved": bool(text(col(row, "NASA involvement filter"))),
+            "nasaFilter": text(col(row, "NASA involvement filter")),
+            "relicStory": text(col(row, "Relic panel story")),
+            "nasaCitationUrl": text(col(row, "NASA citation URL")),
+            "storyCitationUrl": text(col(row, "Story citation URL")),
+            "citationNote": text(col(row, "Citation note")),
         })
 
     index = {}
     for m in missions:
-        index.setdefault(m["bodyId"], {"missions": [], "stations": [], "counts": {}})
-        index[m["bodyId"]]["missions"].append(m["id"])
+        group = index.setdefault(m["bodyId"], {"missions": [], "stations": [], "counts": {}, "firstYear": None, "lastYear": None})
+        group["missions"].append(m["id"])
+        if m["launchYear"]:
+            group["firstYear"] = min(group["firstYear"] or m["launchYear"], m["launchYear"])
+            group["lastYear"] = max(group["lastYear"] or m["launchYear"], m["launchYear"])
     for s in stations:
-        index.setdefault("earth", {"missions": [], "stations": [], "counts": {}})
-        index["earth"]["stations"].append(s["id"])
+        group = index.setdefault("earth", {"missions": [], "stations": [], "counts": {}, "firstYear": None, "lastYear": None})
+        group["stations"].append(s["id"])
+        if s["firstModuleYear"]:
+            group["firstYear"] = min(group["firstYear"] or s["firstModuleYear"], s["firstModuleYear"])
+            group["lastYear"] = max(group["lastYear"] or s["firstModuleYear"], s["firstModuleYear"])
 
     kind_of = {m["id"]: m["visualKind"] for m in missions}
     for body_id, group in index.items():
@@ -269,17 +352,31 @@ def main():
         group["counts"] = counts
         group["total"] = len(group["missions"]) + len(group["stations"])
 
+    hardware_years = (
+        [m["launchYear"] for m in missions]
+        + [s["firstModuleYear"] for s in stations]
+        + [r["firstFlightYear"] for r in rockets]
+    )
+    hardware_years = [y for y in hardware_years if y]
+    year_range = (
+        {"min": min(hardware_years), "max": max(hardware_years)}
+        if hardware_years
+        else {"min": 1957, "max": 2030}
+    )
+
     dataset = {
         "meta": {
-            "name": "Solar System Explorer dataset",
+            "name": "Space Relics 3D dataset (NASA filtered)",
             "sourceWorkbook": os.path.basename(SRC),
             "builtUtc": pd.Timestamp.now("UTC").strftime("%Y-%m-%dT%H:%M:%SZ"),
-            "sheets": xl.sheet_names,
+            "sheets": sheets,
+            "yearRange": year_range,
             "counts": {
                 "bodies": len(bodies), "moons": len(moons), "missions": len(missions),
                 "stations": len(stations), "rockets": len(rockets),
+                "nasaMissions": len([m for m in missions if m["nasaInvolved"]]),
             },
-            "notes": "File-based database for Space Relics. Replace this file, or rebuild it, then restart the API.",
+            "notes": "Rebuild with tools/build-dataset.py after replacing the workbook.",
         },
         "bodies": bodies, "moons": moons, "missions": missions,
         "stations": stations, "rockets": rockets, "index": index,
@@ -291,6 +388,7 @@ def main():
 
     print("wrote", OUT)
     print("counts", dataset["meta"]["counts"])
+    print("years", year_range)
     print("hardware per body", {k: v["total"] for k, v in sorted(index.items(), key=lambda kv: -kv[1]["total"])})
 
 

@@ -1,17 +1,17 @@
 # Solar System Explorer — Dataset Analysis
 
-Source workbook: `Solar_System_Explorer_Dataset.xlsx`  ·  142,226 bytes
+Source workbook: `Space_Relics_3D_Dataset.xlsx`  ·  131,220 bytes
 
 ## 1. Sheets and volume
 
 | Sheet | Rows | Columns |
 |---|---|---|
-| READ ME | 24 | 2 |
 | Planets & Dwarf Planets | 16 | 30 |
 | Moons (all 460) | 460 | 17 |
-| Missions | 211 | 14 |
-| Space Stations | 19 | 12 |
-| Launch Vehicles | 41 | 13 |
+| Missions | 127 | 20 |
+| Space Stations | 3 | 17 |
+| Launch Vehicles | 16 | 18 |
+| NASA-involved missions | 127 | 20 |
 
 ## 2. Bodies
 
@@ -24,60 +24,52 @@ Source workbook: `Solar_System_Explorer_Dataset.xlsx`  ·  142,226 bytes
 
 ## 3. Missions
 
-- Total missions: **211**
+- Total missions: **127**
 - Bodies with hardware (built dataset): **13**
-- Working now: **65**
+- Working now: **48**
 
 **By category**
 
-- **MOON** — 53
-- **MARS** — 34
-- **VENUS** — 25
-- **ASTROPHYSICS AND SPACE TELESCOPES** — 24
-- **ASTEROIDS AND COMETS** — 19
-- **SUN AND HELIOPHYSICS** — 18
-- **EARTH OBSERVATION AND CLIMATE** — 16
-- **JUPITER** — 11
+- **MOON** — 24
+- **MARS** — 22
+- **SUN AND HELIOPHYSICS** — 16
+- **ASTROPHYSICS AND SPACE TELESCOPES** — 14
+- **EARTH OBSERVATION AND CLIMATE** — 14
+- **ASTEROIDS AND COMETS** — 11
+- **JUPITER** — 10
+- **VENUS** — 6
 - **SATURN** — 5
-- **MERCURY** — 3
+- **MERCURY** — 2
 - **URANUS** — 1
 - **NEPTUNE** — 1
 - **KUIPER BELT / PLUTO** — 1
 
 **By mission type**
 
-- **Orbiter** — 36
-- **Space telescope** — 25
-- **Flyby** — 23
-- **Lander** — 17
-- **Earth observation** — 14
-- **Sample return** — 9
-- **Orbiter + lander** — 9
-- **Rover** — 7
-- **Impactor** — 6
+- **Orbiter** — 19
+- **Flyby** — 18
+- **Space telescope** — 15
+- **Earth observation** — 12
 - **Crewed landing** — 6
-- **Solar observatory** — 6
-- **Atmospheric probe** — 4
-- **Lander + rover** — 4
+- **Impactor** — 5
+- **Lander** — 5
+- **Solar observatory** — 5
+- **Orbiter + lander** — 4
+- **Rover** — 4
 - **Solar probe** — 3
-- **Dual orbiter** — 2
-- **Orbiter + Lander** — 2
-- **Flyby + Lander** — 2
-- **Lander + Flyby** — 2
-- **Flyby + balloon + lander** — 2
 - **Solar polar orbiter** — 2
+- **Sample return** — 2
 - **Solar wind monitor** — 2
 - **Atmospheric probes** — 1
-- **Flyby/Impactor** — 1
-- **Circumlunar** — 1
+- **Atmospheric probe** — 1
 - **Crewed orbiter** — 1
 - **Crewed landing attempt** — 1
-- **Orbiter + lander/rover** — 1
+- **Dual orbiter** — 1
 - **Uncrewed test flight** — 1
 - **CubeSat orbiter** — 1
 - **Crewed flyby** — 1
 - **Space station** — 1
-- **Orbiter + lander + rover** — 1
+- **Lander + rover** — 1
 - **Helicopter** — 1
 - **Twin orbiters** — 1
 - **Sample return campaign** — 1
@@ -87,110 +79,95 @@ Source workbook: `Solar_System_Explorer_Dataset.xlsx`  ·  142,226 bytes
 - **Rotorcraft lander** — 1
 - **Impactor + flyby** — 1
 - **Sample return / asteroid study** — 1
-- **Sample return + orbiter** — 1
 - **Heliocentric orbiter** — 1
 - **Dual solar observatory** — 1
 - **Heliospheric probe** — 1
 - **Dual smallsat** — 1
-- **Four-spacecraft constellation** — 1
 - **Weather satellite** — 1
 - **Crewed space station** — 1
 
 **By status**
 
-- **Active** — 56
-- **Planned** — 13
-- **Active (cruise)** — 6
-- **Ended (1984-07)** — 2
-- **Ended (1986-03)** — 2
-- **Partial (1971)** — 2
+- **Active** — 44
+- **Planned** — 8
+- **Active (cruise)** — 3
 - **Success (2010)** — 2
 - **Success (2009)** — 2
-- **Active (extended)** — 2
-- **Success (2024)** — 2
 - **Ended (1975-03-24)** — 1
 - **Ended (2015-04-30)** — 1
+- **Ended (1963-01-03)** — 1
+- **Ended (1992-10-08)** — 1
+- **Ended (1978-12-09)** — 1
+- **Ended (1994-10-13)** — 1
+- **Success (1964-07-31)** — 1
 
 **By agency (top 12)**
 
 - **NASA (USA)** — 99
-- **USSR** — 30
-- **ESA** — 18
-- **CNSA (China)** — 7
-- **ISRO (India)** — 6
-- **JAXA (Japan)** — 5
 - **ESA + NASA** — 4
-- **ESA + JAXA** — 3
 - **NASA / USGS (USA)** — 3
-- **Roscosmos (Russia)** — 2
-- **Intuitive Machines (USA)** — 2
-- **ESA + Roscosmos** — 2
+- **NASA + ESA** — 2
+- **NASA + ESA + ASI** — 2
+- **West Germany + NASA** — 2
+- **NASA + ASI** — 2
+- **NASA (USA) / BMDO** — 1
+- **NASA (USA) / Advanced Space** — 1
+- **NASA + ESA + JAXA + CSA + UAE** — 1
+- **NASA (USA) / Rocket Lab** — 1
+- **JAXA + NASA + ESA + UK** — 1
 
-- Launch dates parsed: **190/211**
-- Launch span: **1959 → 2025**
+- Launch dates parsed: **112/127**
+- Launch span: **1962 → 2025**
 
 **Missions per decade**
 
-- 1950s — 3
-- 1960s — 21
-- 1970s — 31
-- 1980s — 12
-- 1990s — 21
-- 2000s — 34
-- 2010s — 29
-- 2020s — 39
+- 1960s — 14
+- 1970s — 19
+- 1980s — 2
+- 1990s — 20
+- 2000s — 22
+- 2010s — 15
+- 2020s — 20
 
 ## 4. Space stations
 
-- Total stations: **19**
-- Working now: **3**
+- Total stations: **3**
+- Working now: **2**
 
 **By operator (top 10)**
 
-- **Soviet Union** — 6
-- **CNSA (China)** — 3
-- **Bigelow Aerospace (USA)** — 2
-- **Soviet Union (OKB-1)** — 1
 - **NASA (USA)** — 1
-- **Soviet Union / Russia** — 1
 - **NASA, Roscosmos, ESA, JAXA, CSA** — 1
 - **NASA / Bigelow Aerospace** — 1
-- **Axiom Space (USA)** — 1
-- **Voyager Space + Airbus** — 1
 
 ## 5. Launch vehicles
 
-- Total launch vehicles: **41**
-- Fly today: **21**
+- Total launch vehicles: **16**
+- Fly today: **6**
 
 **Tallest (m)**
 
-- Starship — 121.0 m (United States)
-- Long March 9 — 114.0 m (China)
 - Saturn V — 110.6 m (United States)
-- N1 — 105.0 m (Soviet Union)
 - New Glenn — 98.0 m (United States)
+- Delta IV Heavy — 71.6 m (United States)
+- Falcon Heavy — 70.0 m (United States)
+- Falcon 9 — 70.0 m (United States)
 
 **Largest payload to LEO (kg)**
 
-- Long March 9 — 150,000 kg
 - Saturn V — 140,000 kg
-- Starship — 100,000 kg
-- Energia — 100,000 kg
-- N1 — 95,000 kg
+- Falcon Heavy — 63,800 kg
+- New Glenn — 45,000 kg
+- Delta IV Heavy — 28,790 kg
+- Space Shuttle — 27,500 kg
 
 **By country (top 10)**
 
-- **United States** — 15
-- **Europe** — 5
-- **China** — 5
-- **Russia** — 4
-- **Soviet Union** — 3
-- **India** — 3
-- **United States / New Zealand** — 2
-- **Japan** — 2
-- **Germany** — 1
+- **United States** — 12
 - **Soviet Union / Russia** — 1
+- **Europe** — 1
+- **United States / New Zealand** — 1
+- **Japan** — 1
 
 ## 6. Moons
 
@@ -202,18 +179,18 @@ Source workbook: `Solar_System_Explorer_Dataset.xlsx`  ·  142,226 bytes
 
 **Missions — missing values per column**
 
-- Image URL: 58 (27%)
+- Image URL: 40 (31%)
 
 - Landing sites with published coordinates: **57**
 - Orbital element sets: **162**
-- Missions with a published position: **186/211 (88%)**
-- Missions with a photograph (workbook or resolved): **211/211 (100%)**
+- Missions with a published position: **115/127 (91%)**
+- Missions with a photograph (workbook or resolved): **127/127 (100%)**
 - Missions without any photograph: none
 - Photograph overrides (workbook image was the wrong subject): ['rosalind-franklin']
 
 ## 8. Findings
 
-1. **The dataset is unusually complete** — 211 missions, 460 moons, 41 vehicles and 19 stations, with a photograph for 211 of 211 missions and a published position for the large majority.
+1. **The dataset is unusually complete** — 211 missions, 460 moons, 41 vehicles and 19 stations, with a photograph for 127 of 127 missions and a published position for the large majority.
 2. **Earth is the busiest world** by hardware count (observation, telescope and station records cluster there), followed by Mars; the outer planets are dominated by flyby probes and orbiters.
 3. **Photographs are complete:** 0 mission(s) have no photograph at all (the media index fills every gap); and any record whose photo cannot load falls back to a generated card rather than an empty frame.
 4. **One known data error is handled explicitly:** the workbook illustrates ESA's Rosalind Franklin rover with a portrait of the chemist Rosalind Franklin; `media.json` overrides it and credits the correction.

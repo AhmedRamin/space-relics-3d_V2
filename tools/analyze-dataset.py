@@ -7,10 +7,10 @@ from collections import Counter
 import pandas as pd
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-XLSX = os.path.join(ROOT, "client", "public", "data", "source", "Solar_System_Explorer_Dataset.xlsx")
-DATASET = os.path.join(ROOT, "client", "public", "data", "solar-system-dataset.json")
-COORDS = os.path.join(ROOT, "client", "public", "data", "coordinates.json")
-MEDIA = os.path.join(ROOT, "client", "public", "data", "media.json")
+XLSX = os.path.join(ROOT, "public", "data", "source", "Space_Relics_3D_Dataset.xlsx")
+DATASET = os.path.join(ROOT, "public", "data", "solar-system-dataset.json")
+COORDS = os.path.join(ROOT, "public", "data", "coordinates.json")
+MEDIA = os.path.join(ROOT, "public", "data", "media.json")
 
 xl = pd.ExcelFile(XLSX)
 planets = xl.parse("Planets & Dwarf Planets")

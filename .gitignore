@@ -1,9 +1,0 @@
-node_modules/
-dist/
-.env
-.vercel
-*.log
-.DS_Store
-__pycache__/
-tools/media-cache.json
-.render-smoke*
