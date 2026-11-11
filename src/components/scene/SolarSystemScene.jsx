@@ -74,6 +74,18 @@ function ClusterNode({ body, kind, count, max, onFocus }) {
   );
 }
 
+/**
+ * Small screen-space nudges so neighbouring worlds never trade pills. The inner four sit
+ * within a few pixels of each other at the framed distance, so they are staggered instead
+ * of all hanging straight below their planet.
+ */
+const LABEL_NUDGE = {
+  mercury: { x: 8, y: -24 },
+  venus: { x: 16, y: 14 },
+  earth: { x: -24, y: 14 },
+  mars: { x: 14, y: 14 },
+};
+
 function Body({ body, angle, onFocus, selected, showLabel, textureSize, orbit }) {
   const spin = useRef();
   const clouds = useRef();
@@ -170,17 +182,22 @@ function Body({ body, angle, onFocus, selected, showLabel, textureSize, orbit })
       {showLabel || hovered ? (
         <Html
           center
-          position={[0, -(RINGS[body.id] ? radius * (RINGS[body.id].outer + 0.25) : radius + 0.9), 0]}
+          position={[
+            0,
+            // Anchor the pill just under the body so the name reads as attached to its
+            // world instead of floating in empty space. Ringed worlds clear their rings.
+            -(rings ? radius * rings.outer + radius * 0.05 : radius + radius * 0.07),
+            0,
+          ]}
           style={{ pointerEvents: 'none' }}
+          zIndexRange={[6, 0]}
         >
           <div
             className={`scene-label${hovered ? ' scene-label--on' : ''}${
               (body.orderFromSun || 99) <= 4 ? ' scene-label--minor' : ''
             }`}
             style={{
-              transform: `translate(${
-                (body.orderFromSun || 0) === 3 ? -24 : (body.orderFromSun || 0) === 4 ? 24 : 0
-              }px, ${(body.orderFromSun || 0) % 2 ? 12 : -10}px)`,
+              transform: `translate(${LABEL_NUDGE[body.id]?.x ?? 0}px, ${LABEL_NUDGE[body.id]?.y ?? 2}px)`,
             }}
           >
             {body.name}
@@ -266,11 +283,7 @@ export function SolarSystemScene({ bodies, onFocusBody, selectedBodyId, showDwar
             orbit={orbits[index]}
             onFocus={onFocusBody}
             selected={selectedBodyId === body.id}
-            showLabel={
-              body.id !== 'sun' &&
-              body.id !== 'asteroids' &&
-              ((body.orderFromSun || 0) >= 5 || body.id === 'earth')
-            }
+            showLabel={body.id !== 'sun' && body.id !== 'asteroids'}
             textureSize={textureSize}
           />
         </group>

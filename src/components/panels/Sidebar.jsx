@@ -65,6 +65,9 @@ export function Sidebar({
         </div>
       </div>
 
+      {/* One scroll surface for the whole rail: the list and the hardware grid stay in
+          reading order and neither can spill over the panel edge or the phone bar. */}
+      <div className="sidebar__body">
       <section className="sidebar__section">
         <div className="sidebar__title">
           <span className="eyebrow">{view.mode === 'body' ? `Hardware at ${current ? current.name : 'this body'}` : 'Bodies'}</span>
@@ -152,6 +155,7 @@ export function Sidebar({
         setShowDwarfs={setShowDwarfs}
         counts={facets && facets.counts}
       />
+      </div>
 
       <div className="sidebar__foot small muted">
         {year ? (

@@ -405,6 +405,9 @@
   border-radius: var(--radius-lg);
   backdrop-filter: blur(var(--glass-blur)) saturate(1.15);
   box-shadow: var(--shadow-md), var(--inner-light);
+  /* The rail is a fixed-height column: clip it so an open hardware grid can never paint
+     outside the rounded panel or over the controls below it. */
+  overflow: hidden;
   transform: translateX(calc(-100% - 24px));
   opacity: 0;
   transition: transform 320ms var(--ease), opacity 320ms var(--ease);
@@ -423,12 +426,25 @@
   justify-content: space-between;
 }
 
+.sidebar__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-gutter: stable;
+  padding-right: 2px;
+}
+
 .sidebar__section {
   display: flex;
   flex-direction: column;
   gap: 6px;
   min-height: 0;
-  flex: 1 1 45%;
+  flex: 0 0 auto;
 }
 
 .sidebar__title {
@@ -439,7 +455,6 @@
 }
 
 .sidebar__scroll {
-  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -564,11 +579,20 @@
   flex: 0 0 auto;
 }
 
+/* The hardware grid is a normal block that lives inside the rail's single scroll region.
+   It must never own a second scrollbar or keep its intrinsic height while being clipped. */
+.icon-panel--open {
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 auto;
+}
+
 .icon-panel__toggle {
   display: flex;
   align-items: center;
   gap: 10px;
   width: 100%;
+  flex: 0 0 auto;
   padding: 10px;
   border: 0;
   background: none;
@@ -1539,6 +1563,16 @@ p { margin: 0; color: var(--text-secondary); font-size: 0.86rem; line-height: 1.
 .scene-label--on { color: #f2f6ff; }
 .scene-label__count { color: #6f7d99; }
 
+/* The walkthrough owns the screen while it is open: 3D name pills are portalled above
+   the page, so they would otherwise print on top of the tour card. */
+body.is-touring .scene-label,
+body.is-touring .scene-chip,
+body.is-touring .orbit-label {
+  opacity: 0 !important;
+  visibility: hidden;
+  pointer-events: none;
+}
+
 .orbit-label {
   font-size: 10px;
   letter-spacing: 0.08em;
@@ -1760,7 +1794,8 @@ p { margin: 0; color: var(--text-secondary); font-size: 0.86rem; line-height: 1.
   .sidebar {
     top: calc(var(--topbar-h) + 8px);
     left: calc(8px + var(--safe-l));
-    bottom: calc(8px + var(--safe-b));
+    /* stop above the one-thumb control bar so “System” is always tappable */
+    bottom: calc(var(--phone-bar-h) + 12px + var(--safe-b));
     width: var(--rail-w);
     z-index: 26;
   }
@@ -1828,7 +1863,7 @@ p { margin: 0; color: var(--text-secondary); font-size: 0.86rem; line-height: 1.
     padding: 13px 16px;
   }
 
-  .phone-bar { display: flex; }
+  .phone-bar { display: flex; z-index: 28; }
 
   /* keep the sheets clear of the control bar */
   .info-panel {
@@ -2028,11 +2063,13 @@ h2 {
   }
 }
 
-/* Phones: the inner planets sit close together, so their labels would collide.
-   The rail still names them; hover/selection restores the label. */
+/* Phones: the inner planets sit close together, so their labels shrink instead of
+   disappearing — every world keeps its name on first load. */
 @media (max-width: 700px) {
   .scene-label--minor {
-    display: none;
+    font-size: 8px;
+    letter-spacing: 0.06em;
+    padding: 2px 5px;
   }
 
   .info-panel {
@@ -2820,7 +2857,7 @@ h2 {
   .app:not(.app--docked) .sidebar {
     top: 6px;
     left: 6px;
-    bottom: 6px;
+    bottom: calc(var(--phone-bar-h) + 10px + var(--safe-b));
     width: min(310px, 88vw);
   }
 
@@ -3015,7 +3052,9 @@ h2 {
 
 @media (max-width: 700px) {
   .scene-label--minor {
-    display: none;
+    font-size: 8px;
+    letter-spacing: 0.05em;
+    padding: 2px 5px;
   }
 }
 

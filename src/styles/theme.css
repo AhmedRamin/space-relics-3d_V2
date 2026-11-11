@@ -64,6 +64,8 @@
 
   /* ---------- layout ---------- */
   --topbar-h: 60px;
+  /* height of the phone control bar (Panels / Guide / System) — the rail stops above it */
+  --phone-bar-h: 74px;
   --rail-w: 276px;
   --rail-w-md: 240px;
   --info-w: 372px;

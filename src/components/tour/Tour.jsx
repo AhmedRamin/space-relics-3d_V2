@@ -144,6 +144,14 @@ export function Tour({ open, onClose, onFinish, api }) {
     }
   }, [open]);
 
+  // Planet name pills live in a portal above the page (drei <Html>), so keep them out of
+  // the walkthrough entirely while a step is open.
+  useEffect(() => {
+    if (!open) return undefined;
+    document.body.classList.add('is-touring');
+    return () => document.body.classList.remove('is-touring');
+  }, [open]);
+
   useEffect(() => {
     if (!open) return undefined;
     const onResize = () => measure();

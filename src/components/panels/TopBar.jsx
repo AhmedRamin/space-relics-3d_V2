@@ -82,10 +82,24 @@ export function TopBar({
           </span>
         </button>
 
-        {view.mode === 'body' && !isPhone ? (
-          <button type="button" className="btn btn--sm btn--ghost" onClick={onBack}>
-            ← Solar System
-          </button>
+        {view.mode === 'body' ? (
+          isPhone ? (
+            // Phones have no room for the label, but the way back must always be on
+            // screen — above the rail drawer and independent of the bottom bar.
+            <button
+              type="button"
+              className="icon-btn topbar__back"
+              onClick={onBack}
+              aria-label="Back to the Solar System"
+              title="Back to the Solar System"
+            >
+              <span aria-hidden="true">←</span>
+            </button>
+          ) : (
+            <button type="button" className="btn btn--sm btn--ghost" onClick={onBack}>
+              ← Solar System
+            </button>
+          )
         ) : null}
 
         {showSearchField ? (
