@@ -1,120 +1,97 @@
 # Space Relics 3D — Solar System Explorer
 
-An interactive 3D Solar System where every planet is surrounded by the real hardware sent to
-it: rovers, landers, orbiters, satellites, space telescopes, probes, helicopters and space
-stations. Click any object to read its record; ask the built-in guide about it.
+> *Abandoned, but Not Forgotten.* 🚀
 
-**Stack:** Next.js 14 (App Router) · React 18 · Three.js / @react-three/fiber / drei ·
-**static JSON data, no backend, no auth, no API keys**. The catalogue is fetched from
-`public/data/` at runtime and the app exports to plain static files.
+An interactive 3D Solar System where every planet is surrounded by the real hardware sent to explore it — rovers, landers, orbiters, satellites, probes, space telescopes, helicopters, and space stations.
 
-## What's inside
+Built for **NASA Space Apps Challenge 2026**. The challenge was abandoned, but the project wasn't forgotten.
 
-* **NASA-filtered dataset** — 127 missions, 3 stations, 16 launch vehicles, 19 bodies and 460
-  moons, built from `public/data/source/Space_Relics_3D_Dataset.xlsx`. Records carry the NASA
-  involvement filter, relic-panel story, surface-relic relevance and citation URLs.
-* **Year timeline in the header** — 1962 → 2031. Drag or press play, and the whole explorer
-  becomes that year: objects not yet launched disappear, cluster counts shrink, and “Year in
-  review” lists that year's launches, stations, rockets and moon discoveries.
-* **Docked explorer rail** — a real column on desktop (open by default, collapsed with `M`,
-  remembered between visits), a drawer on tablets and phones with an edge tab.
-* **First-run guided tour** — 8 spotlight steps over the live UI. It starts automatically on a
-  new browser and can be replayed from the `?` button.
-* **Realistic surfaces** — NASA-derived day/night/cloud/normal/specular maps for Earth, real
-  maps for the Sun, planets and Moon, textured Saturn rings, procedural crater/maria surfaces
-  for the other moons and dwarfs, textured solar arrays and MLI foil on the hardware.
-* **Full hardware detail everywhere** — no light/full detail switch; every object in a body
-  view is drawn at full fidelity.
+## Tech Stack
 
-## Run it
+Next.js 14 · React 18 · Three.js · React Three Fiber · Drei
+
+- No backend, authentication, or API keys.
+- Static JSON dataset loaded at runtime.
+- Exports as plain static files.
+
+## Features
+
+- **NASA-filtered dataset:** 127 missions, 3 space stations, 16 launch vehicles, 19 planetary bodies, and 460 moons.
+- **Interactive 3D exploration:** Explore planets and discover the hardware associated with them.
+- **Year timeline:** Travel through 1962–2031 and see missions, launches, and discoveries unfold.
+- **Detailed 3D hardware:** Procedurally modelled rovers, landers, orbiters, stations, and more.
+- **Realistic planetary surfaces:** NASA-derived imagery, day/night maps, clouds, normal maps, and Saturn's rings.
+- **Mission information:** Click objects to explore their records, stories, and source citations.
+- **Built-in guide:** Ask questions about the Solar System and its missions.
+- **Guided tour:** An interactive 8-step introduction for new visitors.
+- **Responsive interface:** Desktop explorer rail and mobile-friendly navigation.
+
+## Getting Started
 
 ```bash
 npm install
-npm run dev        # http://localhost:3000
+npm run dev
 ```
 
-## Build & deploy
+Open [http://localhost:3000](http://localhost:3000).
+
+## Build & Deploy
 
 ```bash
-npm run build      # static export → ./out
+npm run build
 ```
 
-`next.config.mjs` sets `output: 'export'`, so the build is plain HTML/CSS/JS and can be hosted
-on Vercel (recommended), Netlify, GitHub Pages, S3, or any static file server. On Vercel just
-import the repository and keep the defaults.
+Exports a static website to `./out`.
 
-## Project layout
+Deploy on Vercel, Netlify, GitHub Pages, or any static file host.
 
-```
-app/
-  layout.jsx            metadata, fonts and the global stylesheets
-  page.jsx              the single route
-  ExplorerClient.jsx    browser-only dynamic import of the explorer
+## Project Structure
+
+```text
+app/          Next.js application and entry points
 src/
-  App.jsx               shell: rail, timeline, year panel, tour, info panel
-  components/
-    scene/              SolarSystemScene (orrery) and BodyScene (surface + orbit shells)
-    three/              Canvas host, camera rig, planet sphere, rings, atmosphere, glow
-    hardware/           procedural rovers/landers/orbiters/stations and solar arrays
-    panels/             TopBar, TimelineBar, YearPanel, Sidebar, InfoPanel, PhoneBar, Welcome
-    chat/               the in-browser guide
-    tour/               first-run spotlight tour
-  lib/                  dataStore (catalogue + timeline), textures, scale/position, constants
-  services/             local API surface over the JSON, guide engine
-  styles/               theme.css, app.css
+  components/  3D scenes, hardware, panels, chat and tour
+  lib/         Dataset, timeline, textures and utilities
+  services/    Local data API and guide engine
+  styles/      Application styles
 public/
-  data/                 solar-system-dataset.json, coordinates.json, media.json, source/
-  textures/             surface maps (1024px, ~1.2 MB total)
-tools/                  build-dataset.py, analyze-dataset.py
+  data/        Solar System dataset and source workbook
+  textures/    Planetary surface maps
+tools/         Dataset builder and analysis scripts
 ```
 
 ## Dataset
 
-| Sheet in the workbook | Records |
-|---|---|
-| Planets & Dwarf Planets | 16 bodies |
-| Moons (all 460) | 460 moons |
-| Missions | 127 missions |
-| Space Stations | 3 stations |
-| Launch Vehicles | 16 rockets |
-| NASA-involved missions | cross-checked into `nasaInvolved` |
+The catalogue is built from:
 
-The builder also derives `launchYear`, `firstFlightYear`, `firstModuleYear` and
-`yearDiscovered` for the timeline. Rebuild after replacing the workbook:
+`public/data/source/Space_Relics_3D_Dataset.xlsx`
+
+To rebuild the dataset:
 
 ```bash
-python3 tools/build-dataset.py      # rewrites public/data/solar-system-dataset.json
+python3 tools/build-dataset.py
 python3 tools/analyze-dataset.py > docs/DATASET-ANALYSIS.md
 ```
 
-### Year timeline
+## Keyboard Shortcuts
 
-`src/lib/dataStore.js` builds the year index once:
+| Key | Action |
+|---|---|
+| `M` | Toggle explorer rail |
+| `Y` | Open year review |
+| `F` | Working-now filter |
+| `D` | Dwarf planets |
+| `←` / `→` | Step through years |
+| `Esc` | Close / go back |
 
-```
-missions.launchYear · stations.firstModuleYear · rockets.firstFlightYear
-+ moon discoveries inside that span
-→ { minYear, maxYear, years[], byYear, byBody, busiest }
-```
+## Credits
 
-`app.year` is `null` (all time) or a number. The rail, scene, cluster counts and info panel all
-respect it. Undated records are never hidden.
+Planetary surface textures: [Solar System Scope](https://www.solarsystemscope.com/textures/) — CC BY 4.0, built from NASA imagery.
 
-## Surface imagery
+Mission records include source citations in the dataset.
 
-`public/textures/` ships 15 equirectangular maps: Earth (day, night lights, clouds, normal,
-specular), Mercury, Venus, Mars, Jupiter, Saturn, Uranus, Neptune, Sun, Moon and Saturn's ring
-strip. Source: [Solar System Scope](https://www.solarsystemscope.com/textures/) (CC BY 4.0),
-built from NASA imagery. Textures load asynchronously; a body keeps a tinted fallback until its
-map arrives, so the app also renders offline.
+---
 
-## Quick tour
+**Made for NASA Space Apps Challenge 2026.**
 
-`src/components/tour/Tour.jsx` runs 8 spotlight steps. Each step can prepare the UI first
-(open the rail, park the timeline on 1969, focus Mars), then the target rectangle is measured
-with retries. Completion is stored under `space-relics-tour-v1`; the header `?` replays it.
-
-## Shortcuts
-
-`M` rail · `Y` year review · `F` working-now filter · `D` dwarf planets · `←`/`→` step the year
-(while the review is open) · `Esc` close/go back.
+*The challenge may have been abandoned, but exploration never ends.*
